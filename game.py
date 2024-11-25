@@ -1,281 +1,172 @@
-# #py63
-# import sys
-# import pygame as pg
-# import random
-
-# class breakout():
-#   def main(self):
-#     xspeed_init=6
-#     yspeed_init=6
-#     max_lives=5
-#     bat_speed=30
-#     score=0
-#     width=640
-#     height=430
-#     pg.init()
-#     screen=pg.display.set_mode((width,height))
-#     bat=pg.image.load("bat.jpg").convert()
-#     batrect=bat.get_rect()
-#     ball=pg.image.load("ball.jpg").convert()
-#     ballrect=ball.get_rect()
-#     pong=pg.mixer.Sound("Blip_1-Surround-147.wav")
-#     pong.set_volume(10)
-#     wall=Wall()
-#     wall.build_wall(width)
-#     batrect=batrect.move((width/2)-(batrect.right/2),height-20)
-#     ballrect=ballrect.move(width/2,height/2)
-#     xspeed=xspeed_init
-#     yspeed=yspeed_init
-#     lives=max_lives
-#     clock=pg.time.Clock()
-#     run=True
-#     while run:
-#       clock.tick(60)
-#       for event in pg.event.get():
-#         if event.type==pg.KEYDOWN:
-#             if event.key==pg.K_LEFT:
-#                 batrect=batrect.move(-bat_speed,0)
-#                 if batrect.left<0:
-#                   batrect.left=0
-#             if event.key==pg.K_RIGHT:
-#                batrect=batrect.move(bat_speed,0)
-#                if batrect.right>width:
-#                   batrect.right=width
-#     ballrect=ballrect.move(xspeed,yspeed)
-#     if ballrect.bottom>=batrect.top and\
-#        ballrect.bottom<=batrect.bottom and\
-#        ballrect.right>=batrect.left and\
-#        ballrect.left<=batrect.right:
-#        yspeed=-yspeed
-#        pong.play(0)
-
-#     if ballrect.left<0 or ballrect.right>width:
-#        xspeed=-xspeed
-#        pong.play(0)
-#     if ballrect.top<0:
-#        yspeed=-yspeed
-#        pong.play(0)
-#     if ballrect.top>height:
-#        lives-=1
-#        xspeed=xspeed_init
-#        yspeed=yspeed_init
-#        if random.random()>0.5:
-#           xspeed=-xspeed
-#        ballrect.center=width*random.random(),height/3
-#        if lives==0:
-#           msg=pg.font.Font(None,70).render("Game Over",True,(0,255,255))
-#           msgrect=msg.get_rect()
-#           msgrect=msgrect.move(width/2-(msgrect.center[0]),height/3)
-#           screen.blit(msg,msgrect)
-#           pg.display.flip()
-
-#           while 1:
-#              restart=False
-#              for event in pg.event.get():
-#                 if event.type==pg.KEYDOWN:
-#                    if not (event.key==pg.K_LEFT) or (event.key==pg.K_RIGHT):
-#                       restart=True
-#              if restart:
-#                 screen.fill((0,0,0))
-#                 wall.build_wall(width)
-#                 lives=max_lives
-#                 score=0
-#                 break
-#     index=ballrect.collidelist(wall.brickrect)
-#     if index!=-1:
-#        if ballrect.center[0]>wall.brickrect[index].right or\
-#           ballrect.center[0]<wall.brickrect[index].left:
-#           xspeed=-xspeed
-#        else:
-#           yspeed=-yspeed
-#        pong.play(0)
-#        wall.brickrect[index:index+1]=[]
-#        score+=10
-
-#     if wall.brickrect==[]:
-#           wall.build_wall(width)
-#           xspeed=xspeed_init
-#           yspeed=yspeed_init
-#           ballrect.center=width/2,height/3
-#     screen.fill((0,0,0))
-#     for i in range(len(wall.brickrect)):
-#        screen.blit(wall.brick,wall.brickrect[i])
-#     screen.blit(ball,ballrect)
-#     screen.blit(bat,batrect)
-#     scoretext=pg.font.Font(None,40).render(str(score),True,(0,255,255))
-#     scoretextrect=scoretext.get_rect()
-#     scoretextrect=scoretextrect.move(width-scoretextrect.right,0)
-#     screen.blit(scoretext,scoretextrect)
-#     pg.display.flip()
-
-# class Wall():
-#    def __init__(self):
-#       self.brick=pg.image.load("brick.jpg").convert()
-#       brickrect=self.brick.get_rect()
-#       self.bricka=brickrect.right-brickrect.left
-#       self.brickb=brickrect.bottom-brickrect.top
-#    def build_wall(self,width):
-#       xpos=0
-#       ypos=60
-#       adj=0
-#       self.brickrect=[]
-#       for  i in range(0,52):
-#          if xpos>width:
-#             if adj==0:
-#                adj=self.bricka/2
-#             else:
-#                adj=0
-#             xpos=-adj
-#             ypos+=self.brickb
-#             self.brickrect.append(self.brick.get_rect())
-#             self.brickrect[i]=self.brickrect[i].move(xpos,ypos)
-#             xpos=xpos+self.bricka
-
-# br=breakout()
-# br.main()
-    
-          
 import sys
 import pygame as pg
 import random
+import time
 
 class Breakout:
-    def main(self):
-        xspeed_init = 6
-        yspeed_init = 6
-        max_lives = 5
-        bat_speed = 50
-        score = 0
-        width = 730
-        height = 700
+    def __init__(self):
+        self.width = 730
+        self.height = 700
+        self.bat_speed = 50
+        self.xspeed_init = 6
+        self.yspeed_init = 6
+        self.max_lives = 5
+        self.score = 0
+        self.lives = self.max_lives
+        self.timer_start = None
+        self.game_active = False
         
         pg.init()
-        screen = pg.display.set_mode((width, height))
-        bat = pg.image.load("bat.jpg").convert()
-        batrect = bat.get_rect()
-        ball = pg.image.load("ball.jpg").convert()
-        ballrect = ball.get_rect()
-        pong = pg.mixer.Sound("Blip_1-Surround-147.wav")
-        pong.set_volume(10)
+        self.screen = pg.display.set_mode((self.width, self.height))
+        pg.display.set_caption("Breakout Game")
+        self.clock = pg.time.Clock()
+        self.font = pg.font.Font(None, 40)
+        self.big_font = pg.font.Font(None, 70)
         
-        wall = Wall()
-        wall.build_wall(width)
+        # Load assets
+        self.bat = pg.image.load("bat.jpg").convert()
+        self.ball = pg.image.load("ball.jpg").convert()
+        self.brick = pg.image.load("brick.jpg").convert()
+        self.batrect = self.bat.get_rect()
+        self.ballrect = self.ball.get_rect()
+        self.pong_sound = pg.mixer.Sound("Blip_1-Surround-147.wav")
+        self.pong_sound.set_volume(10)
         
-        batrect = batrect.move((width/2) - (batrect.right/2), height - 20)
-        ballrect = ballrect.move(width/2, height/2)
-        xspeed = xspeed_init
-        yspeed = yspeed_init
-        lives = max_lives
-        clock = pg.time.Clock()
-        run = True
+        self.wall = Wall(self.brick)
+        self.reset_positions()
 
-        while run:
-            clock.tick(60)
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    run = False
-                if event.type == pg.KEYDOWN:
-                    if event.key == pg.K_LEFT:
-                        batrect = batrect.move(-bat_speed, 0)
-                        if batrect.left < 0:
-                            batrect.left = 0
-                    if event.key == pg.K_RIGHT:
-                        batrect = batrect.move(bat_speed, 0)
-                        if batrect.right > width:
-                            batrect.right = width
+    def reset_positions(self):
+        self.batrect.midbottom = (self.width / 2, self.height - 20)
+        self.ballrect.center = (self.width / 2, self.height / 2)
+        self.xspeed = self.xspeed_init
+        self.yspeed = self.yspeed_init
 
-            ballrect = ballrect.move(xspeed, yspeed)
-            if ballrect.bottom >= batrect.top and \
-               ballrect.bottom <= batrect.bottom and \
-               ballrect.right >= batrect.left and \
-               ballrect.left <= batrect.right:
-                yspeed = -yspeed
-                pong.play(0)
+    def show_start_screen(self):
+        self.screen.fill((0, 0, 0))
+        title_text = self.big_font.render("Breakout Game", True, (255, 255, 255))
+        start_text = self.font.render("Press ENTER to Start", True, (0, 255, 0))
+        self.screen.blit(title_text, (self.width / 2 - title_text.get_width() / 2, self.height / 3))
+        self.screen.blit(start_text, (self.width / 2 - start_text.get_width() / 2, self.height / 2))
+        pg.display.flip()
 
-            if ballrect.left < 0 or ballrect.right > width:
-                xspeed = -xspeed
-                pong.play(0)
-            if ballrect.top < 0:
-                yspeed = -yspeed
-                pong.play(0)
-            if ballrect.top > height:
-                lives -= 1
-                xspeed = xspeed_init
-                yspeed = yspeed_init
-                if random.random() > 0.5:
-                    xspeed = -xspeed
-                ballrect.center = (width * random.random(), height/3)
-                if lives == 0:
-                    msg = pg.font.Font(None, 70).render("Game Over", True, (0, 255, 255))
-                    msgrect = msg.get_rect()
-                    msgrect = msgrect.move(width/2 - (msgrect.center[0]), height/3)
-                    screen.blit(msg, msgrect)
-                    pg.display.flip()
+    def run(self):
+        while True:
+            if not self.game_active:
+                self.show_start_screen()
+                self.handle_start_screen_events()
+            else:
+                self.handle_game_events()
+                self.update_game()
+                self.render_game()
+            self.clock.tick(60)
 
-                    waiting = True
-                    while waiting:
-                        for event in pg.event.get():
-                            if event.type == pg.KEYDOWN:
-                                waiting = False
-                    screen.fill((0, 0, 0))
-                    wall.build_wall(width)
-                    lives = max_lives
-                    score = 0
+    def handle_start_screen_events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
+                self.game_active = True
+                self.score = 0
+                self.lives = self.max_lives
+                self.wall.build_wall(self.width)
+                self.timer_start = time.time()
+                self.reset_positions()
 
-            index = ballrect.collidelist(wall.brickrect)
-            if index != -1:
-                if ballrect.center[0] > wall.brickrect[index].right or \
-                   ballrect.center[0] < wall.brickrect[index].left:
-                    xspeed = -xspeed
-                else:
-                    yspeed = -yspeed
-                pong.play(0)
-                wall.brickrect[index:index+1] = []
-                score += 10
+    def handle_game_events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_LEFT:
+                    self.batrect.x -= self.bat_speed
+                    if self.batrect.left < 0:
+                        self.batrect.left = 0
+                if event.key == pg.K_RIGHT:
+                    self.batrect.x += self.bat_speed
+                    if self.batrect.right > self.width:
+                        self.batrect.right = self.width
 
-            if not wall.brickrect:
-                wall.build_wall(width)
-                xspeed = xspeed_init
-                yspeed = yspeed_init
-                ballrect.center = (width/2, height/3)
+    def update_game(self):
+        self.ballrect.x += self.xspeed
+        self.ballrect.y += self.yspeed
 
-            screen.fill((0, 0, 0))
-            for i in range(len(wall.brickrect)):
-                screen.blit(wall.brick, wall.brickrect[i])
-            screen.blit(ball, ballrect)
-            screen.blit(bat, batrect)
-            scoretext = pg.font.Font(None, 40).render(str(score), True, (0, 255, 255))
-            scoretextrect = scoretext.get_rect()
-            scoretextrect = scoretextrect.move(width - scoretextrect.right, 0)
-            screen.blit(scoretext, scoretextrect)
-            pg.display.flip()
+        # Ball collisions with walls
+        if self.ballrect.left <= 0 or self.ballrect.right >= self.width:
+            self.xspeed = -self.xspeed
+            self.pong_sound.play()
+        if self.ballrect.top <= 0:
+            self.yspeed = -self.yspeed
+            self.pong_sound.play()
 
-        pg.quit()
+        # Ball collision with paddle
+        if self.ballrect.colliderect(self.batrect):
+            self.yspeed = -self.yspeed
+            self.pong_sound.play()
+
+        # Ball goes out of screen
+        if self.ballrect.top > self.height:
+            self.lives -= 1
+            self.reset_positions()
+            if self.lives == 0:
+                self.game_active = False
+
+        # Ball collision with bricks
+        index = self.ballrect.collidelist(self.wall.brickrect)
+        if index != -1:
+            brick_hit = self.wall.brickrect[index]
+            if self.ballrect.centerx < brick_hit.left or self.ballrect.centerx > brick_hit.right:
+                self.xspeed = -self.xspeed
+            else:
+                self.yspeed = -self.yspeed
+            self.pong_sound.play()
+            del self.wall.brickrect[index]
+            self.score += 10
+
+        # Check if all bricks are cleared
+        if not self.wall.brickrect:
+            self.wall.build_wall(self.width)
+            self.reset_positions()
+
+    def render_game(self):
+        self.screen.fill((0, 0, 0))
+        # Draw bricks
+        for brick in self.wall.brickrect:
+            self.screen.blit(self.brick, brick)
+
+        # Draw paddle and ball
+        self.screen.blit(self.bat, self.batrect)
+        self.screen.blit(self.ball, self.ballrect)
+
+        # Draw score and lives
+        score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+        lives_text = self.font.render(f"Lives: {self.lives}", True, (255, 255, 255))
+        timer_text = self.font.render(f"Time: {int(time.time() - self.timer_start)}s", True, (255, 255, 255))
+        self.screen.blit(score_text, (10, 10))
+        self.screen.blit(lives_text, (10, 40))
+        self.screen.blit(timer_text, (10, 70))
+
+        pg.display.flip()
 
 class Wall:
-    def __init__(self):
-        self.brick = pg.image.load("brick.jpg").convert()
-        brickrect = self.brick.get_rect()
-        self.bricka = brickrect.right - brickrect.left
-        self.brickb = brickrect.bottom - brickrect.top
+    def __init__(self, brick_image):
+        self.brick = brick_image
+        self.brickrect = []
 
     def build_wall(self, width):
-        xpos = 0
-        ypos = 60
-        adj = 0
         self.brickrect = []
-        for i in range(0, 52):
-            if xpos > width:
-                if adj == 0:
-                    adj = self.bricka / 2
-                else:
-                    adj = 0
-                xpos = -adj
-                ypos += self.brickb
-            self.brickrect.append(self.brick.get_rect())
-            self.brickrect[i] = self.brickrect[i].move(xpos, ypos)
-            xpos = xpos + self.bricka
+        brick_width = self.brick.get_width()
+        brick_height = self.brick.get_height()
+        xpos, ypos = 0, 60
+        for _ in range(52):
+            if xpos + brick_width > width:
+                xpos = 0
+                ypos += brick_height
+            rect = self.brick.get_rect(topleft=(xpos, ypos))
+            self.brickrect.append(rect)
+            xpos += brick_width
 
 if __name__ == "__main__":
-    br = Breakout()
-    br.main()
+    game = Breakout()
+    game.run()
