@@ -1,7 +1,7 @@
 import sys
 import pygame as pg
-import random
 import time
+from wall import Wall
 
 class Breakout:
     def __init__(self):
@@ -15,23 +15,30 @@ class Breakout:
         self.lives = self.max_lives
         self.timer_start = None
         self.game_active = False
-        
+
         pg.init()
         self.screen = pg.display.set_mode((self.width, self.height))
         pg.display.set_caption("Breakout Game")
         self.clock = pg.time.Clock()
         self.font = pg.font.Font(None, 40)
         self.big_font = pg.font.Font(None, 70)
-        
-        # Load assets
+
+        # Load assets and scale
         self.bat = pg.image.load("bat.jpg").convert()
-        self.ball = pg.image.load("ball.jpg").convert()
-        self.brick = pg.image.load("brick.jpg").convert()
+        self.ball = pg.image.load("ball.png").convert_alpha()
+        self.brick = pg.image.load("brick.png").convert()
+
+        # Scale assets
+        self.bat = pg.transform.scale(self.bat, (self.width // 6, self.height // 40))
+        self.ball = pg.transform.scale(self.ball, (self.width // 10, self.width // 10))
+        self.brick = pg.transform.scale(self.brick, (self.width // 10, self.height // 25))
+
         self.batrect = self.bat.get_rect()
         self.ballrect = self.ball.get_rect()
+
         self.pong_sound = pg.mixer.Sound("Blip_1-Surround-147.wav")
         self.pong_sound.set_volume(10)
-        
+
         self.wall = Wall(self.brick)
         self.reset_positions()
 
@@ -74,19 +81,20 @@ class Breakout:
                 self.reset_positions()
 
     def handle_game_events(self):
+        keys = pg.key.get_pressed()
+        if keys[pg.K_LEFT]:
+            self.batrect.x -= self.bat_speed
+            if self.batrect.left < 0:
+                self.batrect.left = 0
+        if keys[pg.K_RIGHT]:
+            self.batrect.x += self.bat_speed
+            if self.batrect.right > self.width:
+                self.batrect.right = self.width
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 sys.exit()
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_LEFT:
-                    self.batrect.x -= self.bat_speed
-                    if self.batrect.left < 0:
-                        self.batrect.left = 0
-                if event.key == pg.K_RIGHT:
-                    self.batrect.x += self.bat_speed
-                    if self.batrect.right > self.width:
-                        self.batrect.right = self.width
 
     def update_game(self):
         self.ballrect.x += self.xspeed
@@ -149,23 +157,6 @@ class Breakout:
 
         pg.display.flip()
 
-class Wall:
-    def __init__(self, brick_image):
-        self.brick = brick_image
-        self.brickrect = []
-
-    def build_wall(self, width):
-        self.brickrect = []
-        brick_width = self.brick.get_width()
-        brick_height = self.brick.get_height()
-        xpos, ypos = 0, 60
-        for _ in range(52):
-            if xpos + brick_width > width:
-                xpos = 0
-                ypos += brick_height
-            rect = self.brick.get_rect(topleft=(xpos, ypos))
-            self.brickrect.append(rect)
-            xpos += brick_width
 
 if __name__ == "__main__":
     game = Breakout()
