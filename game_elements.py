@@ -3,6 +3,7 @@ import pygame as pg
 import time
 from wall import Wall
 
+
 class Breakout:
     def __init__(self):
         self.width = 730
@@ -14,7 +15,9 @@ class Breakout:
         self.score = 0
         self.lives = self.max_lives
         self.timer_start = None
+        self.final_time = 0  # زمان ثابت پایان بازی
         self.game_active = False
+        self.game_won = False
 
         pg.init()
         self.screen = pg.display.set_mode((self.width, self.height))
@@ -56,11 +59,35 @@ class Breakout:
         self.screen.blit(start_text, (self.width / 2 - start_text.get_width() / 2, self.height / 2))
         pg.display.flip()
 
+    def show_end_screen(self):
+        self.screen.fill((0, 0, 0))
+        if self.game_won:
+            message = "You Win!"
+            color = (0, 255, 0)
+        else:
+            message = "Game Over!"
+            color = (255, 0, 0)
+
+        end_text = self.big_font.render(message, True, color)
+        score_text = self.font.render(f"Score: {self.score}", True, (255, 255, 255))
+        time_text = self.font.render(f"Time: {self.final_time}s", True, (255, 255, 255))  # استفاده از زمان ثابت
+        restart_text = self.font.render("Press R to Restart", True, (0, 255, 255))
+
+        self.screen.blit(end_text, (self.width / 2 - end_text.get_width() / 2, self.height / 3))
+        self.screen.blit(score_text, (self.width / 2 - score_text.get_width() / 2, self.height / 2))
+        self.screen.blit(time_text, (self.width / 2 - time_text.get_width() / 2, self.height / 2 + 40))
+        self.screen.blit(restart_text, (self.width / 2 - restart_text.get_width() / 2, self.height / 2 + 80))
+        pg.display.flip()
+
     def run(self):
         while True:
             if not self.game_active:
-                self.show_start_screen()
-                self.handle_start_screen_events()
+                if self.timer_start is None:
+                    self.show_start_screen()
+                    self.handle_start_screen_events()
+                else:
+                    self.show_end_screen()
+                    self.handle_end_screen_events()
             else:
                 self.handle_game_events()
                 self.update_game()
@@ -79,6 +106,15 @@ class Breakout:
                 self.wall.build_wall(self.width)
                 self.timer_start = time.time()
                 self.reset_positions()
+
+    def handle_end_screen_events(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+            if event.type == pg.KEYDOWN and event.key == pg.K_r:
+                self.timer_start = None
+                self.game_active = False
 
     def handle_game_events(self):
         keys = pg.key.get_pressed()
@@ -119,6 +155,8 @@ class Breakout:
             self.reset_positions()
             if self.lives == 0:
                 self.game_active = False
+                self.game_won = False
+                self.final_time = int(time.time() - self.timer_start)  # زمان پایان بازی
 
         # Ball collision with bricks
         index = self.ballrect.collidelist(self.wall.brickrect)
@@ -134,8 +172,9 @@ class Breakout:
 
         # Check if all bricks are cleared
         if not self.wall.brickrect:
-            self.wall.build_wall(self.width)
-            self.reset_positions()
+            self.game_active = False
+            self.game_won = True
+            self.final_time = int(time.time() - self.timer_start)  # زمان پایان بازی
 
     def render_game(self):
         self.screen.fill((0, 0, 0))

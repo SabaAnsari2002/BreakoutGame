@@ -8,7 +8,7 @@ class Wall:
         brick_width = self.brick.get_width()
         brick_height = self.brick.get_height()
         xpos, ypos = 0, 60
-        for _ in range(52):
+        for _ in range(50):
             if xpos + brick_width > width:
                 xpos = 0
                 ypos += brick_height
